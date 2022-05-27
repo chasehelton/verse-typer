@@ -32,6 +32,5 @@ export async function getBible(book: string, chapter: string, verse: string) {
             }   
         }
     );
-    console.log(data);
     return data;
 }

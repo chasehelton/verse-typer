@@ -32,12 +32,12 @@ const App: React.FC = () => {
     <div className='text-center'>
       {!verse && (
         <>
-          <h1 className='text-4xl'>Verse Lookup</h1>
+          <h1 className='text-2xl'>Search by Reference</h1>
           <form
             className='flex flex-col justify-center'
             onSubmit={handleSubmit}
           >
-            <div className='flex flex-col sm:flex-row justify-center w-96 mx-auto'>
+            <div className='flex flex-col justify-center w-96 mx-auto'>
               <div className='flex flex-row justify-between mx-5 my-2'>
                 <label htmlFor='book'>Book</label>
                 <input
