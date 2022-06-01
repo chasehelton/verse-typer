@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
 type Verse = {
-  canonical: string;
-  parsed: any;
-  passage_meta: any;
-  passages: string[];
-  query: string;
+  ref: string,
+  charArray: string[] | undefined,
 };
 
 interface TyperProps {
@@ -116,9 +113,9 @@ const acceptedKeys: string[] = [
 ];
 
 const Typer: React.FC<TyperProps> = (props: TyperProps) => {
-  const [typingIndex, setTypingIndex] = useState<number>(0);
-  const [charArray, setCharArray] = useState<string[] | undefined>([]);
   const [typing, setTyping] = useState<string | undefined>('');
+  const [typingIndex, setTypingIndex] = useState<number>(0);
+  const charArray = props.verse?.charArray || []; 
   const [errorMap, setErrorMap] = useState<any>({});
   const [isFinished, setIsFinished] = useState<boolean>(false);
   const [timeElapsedWhole, setTimeElapsedWhole] = useState<number>(0);
@@ -126,22 +123,13 @@ const Typer: React.FC<TyperProps> = (props: TyperProps) => {
   const [startTime, setStartTime] = useState<Date>(new Date());
   const [finalTime, setFinalTime] = useState<string>('');
   const [startedTyping, setStartedTyping] = useState<boolean>(false);
+  // const [wholeInterval, setWholeInterval] = useState<ReturnType<typeof setInterval>>();
+  // const [decimalInterval, setDecimalInterval] = useState<ReturnType<typeof setInterval>>();
   var wholeInterval: any;
   var decimalInterval: any;
 
   useEffect(() => {
     if (props.verse) {
-      setCharArray(
-        props.verse?.passages[0]
-          .replace(/(\r\n|\n|\r)/gm, '')
-          .replace(/\s\s+/g, ' ')
-          .replace(/“/g, '"')
-          .replace(/”/g, '"')
-          .replace(/‘/g, "'")
-          .replace(/’/g, "'")
-          .trim()
-          .split('')
-      );
       setTyping('');
       setTypingIndex(0);
       setErrorMap({});
@@ -226,7 +214,7 @@ const Typer: React.FC<TyperProps> = (props: TyperProps) => {
           <div>
             {timeElapsedWhole}.{timeElapsedDecimal}
           </div>
-          <h2>{props?.verse?.canonical}</h2>
+          <h2>{props?.verse?.ref}</h2>
           <div>
             <div className='h-48 w-96 mx-auto overflow-scroll'>
               {charArray?.map((letter, index) => (
@@ -255,7 +243,7 @@ const Typer: React.FC<TyperProps> = (props: TyperProps) => {
       {isFinished && (
         <div>
           <p>
-            Nice job! Your final time for {props?.verse?.canonical} was (
+            Nice job! Your final time for {props?.verse?.ref} was (
             {finalTime}) seconds.
           </p>
           <button
