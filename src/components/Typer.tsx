@@ -238,29 +238,30 @@ const Typer: React.FC<TyperProps> = (props: TyperProps) => {
 
   return (
     <div className='mx-auto w-full sm:w-96 mt-2'>
-      <div className='text-left'>
+      <div className=''>
         <div className='flex flex-row justify-between p-1 rounded-md bg-blue-50'>
-          <h2 className='font-bold'>{props?.verse?.ref}</h2>
+          <h2 className='font-bold w-32'>{props?.verse?.ref}</h2>
           {!startedTyping && !isFinished ? (
-            <p className='text-slate-400'>Start typing!</p>
+            <p className='text-center text-slate-400 w-32'>Start typing!</p>
           ) : (
-            <button onClick={() => handleRestart()} className='text-blue-400'>
+            <button
+              onClick={() => handleRestart()}
+              className='text-blue-400 w-32'
+            >
               Restart
             </button>
           )}
-          <div className='font-bold w-16'>
-            <p>
-              {minutes.toLocaleString('en-US', {
-                minimumIntegerDigits: 2,
-                useGrouping: false,
-              })}
-              {':'}
-              {seconds.toLocaleString('en-US', {
-                minimumIntegerDigits: 2,
-                useGrouping: false,
-              })}
-            </p>
-          </div>
+          <p className='text-right font-bold w-32'>
+            {minutes.toLocaleString('en-US', {
+              minimumIntegerDigits: 2,
+              useGrouping: false,
+            })}
+            {':'}
+            {seconds.toLocaleString('en-US', {
+              minimumIntegerDigits: 2,
+              useGrouping: false,
+            })}
+          </p>
         </div>
         <div className='flex flex-col items-center'>
           <div
