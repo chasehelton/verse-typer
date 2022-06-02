@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import Typer from './Typer';
+import VerseForm from './components/VerseForm';
+import Typer from './components/Typer';
 import Copyright from './Copyright';
 import { getVersesByReference } from './api/bible';
 
@@ -10,6 +11,7 @@ type Verse = {
 
 const App: React.FC = () => {
   const [verse, setVerse] = useState<Verse | undefined>();
+  const [showingForm, setShowingForm] = useState<boolean>(true);
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     const target = e.target as typeof e.target & {
@@ -17,39 +19,19 @@ const App: React.FC = () => {
     };
     const ref = target.ref.value;
     setVerse(await getVersesByReference(ref));
+    setShowingForm(false);
   };
 
   return (
-    <div className='text-center'>
-      {!verse && (
-        <>
-          <h1 className='text-2xl'>Search by Reference</h1>
-          <form
-            className='flex flex-col justify-center'
-            onSubmit={handleSubmit}
-          >
-            <div className='flex flex-col justify-center w-96 mx-auto'>
-              <div className='flex flex-row justify-between mx-5 my-2'>
-                <label htmlFor='ref'>Reference</label>
-                <input
-                  className='border-slate-200 border-2 rounded-md ml-2 w-48'
-                  required
-                  type='text'
-                  name='ref'
-                  id='ref'
-                  placeholder='e.g. Psalm 1:1-6'
-                />
-              </div>
-            </div>
-            <button
-              className='w-24 mx-auto bg-blue-500 hover:bg-blue-400 text-white px-4 rounded-md'
-              type='submit'
-            >
-              Submit
-            </button>
-          </form>
-        </>
-      )}
+    <div className='flex flex-col justify-center mx-4 sm:mx-0'>
+      <h1 className='text-center text-2xl'>Verse Typer</h1>
+      <div className='flex flex-row justify-around w-96 mx-auto'>
+        {showingForm ? (
+          <VerseForm handleSubmit={handleSubmit} />
+        ) : (
+          <button className="text-blue-400" onClick={() => setShowingForm(true)}>New Verse</button>
+        )}
+      </div>
 
       {verse && <Typer verse={verse} setVerse={setVerse} />}
       <Copyright />

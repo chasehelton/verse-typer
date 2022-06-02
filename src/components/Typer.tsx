@@ -131,19 +131,38 @@ const Typer: React.FC<TyperProps> = (props: TyperProps) => {
   });
 
   useEffect(() => {
-    if (typingRef.current) {
-      typingRef.current.focus();
-    }
-  }, []);
-
-  useEffect(() => {
     if (props.verse) {
+      setTimeout(() => {
+        if (typingRef.current) {
+          typingRef.current.focus();
+        }
+      }, 400);
       setTyping('');
       setTypingIndex(0);
       setErrorMap({});
       setIsFinished(false);
     }
   }, [props.verse]);
+
+  const handleRestart = () => {
+    reset();
+    pause();
+    setTyping('');
+    setTypingIndex(0);
+    setErrorMap({});
+    setIsFinished(false);
+    setStartedTyping(false);
+    setFinalTime('');
+    setTotalErrors(0);
+    setAccuracy('');
+    setWpm('');
+    setCpm('');
+    setTimeout(() => {
+      if (typingRef.current) {
+        typingRef.current.focus();
+      }
+    }, 400);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     let keyPressed: string = e.key;
@@ -172,10 +191,11 @@ const Typer: React.FC<TyperProps> = (props: TyperProps) => {
         ) + '%'
       );
       setWpm(
-        ((charArray.length / 5) / ((seconds + (minutes * 60)) / 60)).toFixed(0) + ' wpm'
+        (charArray.length / 5 / ((seconds + minutes * 60) / 60)).toFixed(0) +
+          ' wpm'
       );
       setCpm(
-        ((charArray.length) / ((seconds + (minutes * 60)) / 60)).toFixed(0) + ' cpm'
+        (charArray.length / ((seconds + minutes * 60) / 60)).toFixed(0) + ' cpm'
       );
       setFinalTime(
         minutes.toLocaleString('en-US', {
@@ -189,7 +209,6 @@ const Typer: React.FC<TyperProps> = (props: TyperProps) => {
           })
       );
       if (isRunning) {
-        reset();
         pause();
       }
       return;
@@ -218,21 +237,29 @@ const Typer: React.FC<TyperProps> = (props: TyperProps) => {
   };
 
   return (
-    <div className='mx-auto w-full sm:w-96 mt-4'>
+    <div className='mx-auto w-full sm:w-96 mt-2'>
       <div className='text-left'>
-        <div className='flex flex-row justify-between bg-blue-50'>
+        <div className='flex flex-row justify-between p-1 rounded-md bg-blue-50'>
           <h2 className='font-bold'>{props?.verse?.ref}</h2>
-          <div className='font-bold'>
-            Time Elapsed{' '}
-            {minutes.toLocaleString('en-US', {
-              minimumIntegerDigits: 2,
-              useGrouping: false,
-            })}
-            {':'}
-            {seconds.toLocaleString('en-US', {
-              minimumIntegerDigits: 2,
-              useGrouping: false,
-            })}
+          {!startedTyping && !isFinished ? (
+            <p className='text-slate-400'>Start typing!</p>
+          ) : (
+            <button onClick={() => handleRestart()} className='text-blue-400'>
+              Restart
+            </button>
+          )}
+          <div className='font-bold w-16'>
+            <p>
+              {minutes.toLocaleString('en-US', {
+                minimumIntegerDigits: 2,
+                useGrouping: false,
+              })}
+              {':'}
+              {seconds.toLocaleString('en-US', {
+                minimumIntegerDigits: 2,
+                useGrouping: false,
+              })}
+            </p>
           </div>
         </div>
         <div className='flex flex-col items-center'>
@@ -263,14 +290,6 @@ const Typer: React.FC<TyperProps> = (props: TyperProps) => {
           <p>Accuracy - {accuracy}</p>
           <p>WPM - {wpm}</p>
           <p>CPM - {cpm}</p>
-          <button
-            onClick={() => {
-              window.location.reload();
-            }}
-            className='text-blue-400'
-          >
-            Pick another verse!
-          </button>
         </div>
       )}
     </div>
