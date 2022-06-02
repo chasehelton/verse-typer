@@ -249,7 +249,7 @@ const Typer: React.FC<TyperProps> = (props: TyperProps) => {
           <button
             onClick={() => {
               reset();
-              props.setVerse(undefined);
+              window.location.reload();
             }}
             className='text-blue-400'
           >
