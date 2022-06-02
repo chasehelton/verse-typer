@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useStopwatch } from 'react-timer-hook';
 
 type Verse = {
-  ref: string,
-  charArray: string[] | undefined,
+  ref: string;
+  charArray: string[] | undefined;
 };
 
 interface TyperProps {
@@ -115,18 +116,25 @@ const acceptedKeys: string[] = [
 const Typer: React.FC<TyperProps> = (props: TyperProps) => {
   const [typing, setTyping] = useState<string | undefined>('');
   const [typingIndex, setTypingIndex] = useState<number>(0);
-  const charArray = props.verse?.charArray || []; 
+  const charArray = props.verse?.charArray || [];
   const [errorMap, setErrorMap] = useState<any>({});
   const [isFinished, setIsFinished] = useState<boolean>(false);
-  const [timeElapsedWhole, setTimeElapsedWhole] = useState<number>(0);
-  const [timeElapsedDecimal, setTimeElapsedDecimal] = useState<number>(0);
-  const [startTime, setStartTime] = useState<Date>(new Date());
   const [finalTime, setFinalTime] = useState<string>('');
   const [startedTyping, setStartedTyping] = useState<boolean>(false);
-  // const [wholeInterval, setWholeInterval] = useState<ReturnType<typeof setInterval>>();
-  // const [decimalInterval, setDecimalInterval] = useState<ReturnType<typeof setInterval>>();
-  var wholeInterval: any;
-  var decimalInterval: any;
+  const [totalErrors, setTotalErrors] = useState<number>(0);
+  const [accuracy, setAccuracy] = useState<string>('');
+  const [wpm, setWpm] = useState<string>('');
+  const [cpm, setCpm] = useState<string>('');
+  const typingRef = useRef<HTMLInputElement>(null);
+  const { seconds, minutes, isRunning, start, pause, reset } = useStopwatch({
+    autoStart: false,
+  });
+
+  useEffect(() => {
+    if (typingRef.current) {
+      typingRef.current.focus();
+    }
+  }, []);
 
   useEffect(() => {
     if (props.verse) {
@@ -143,40 +151,57 @@ const Typer: React.FC<TyperProps> = (props: TyperProps) => {
       keyPressed === 'Shift' ||
       keyPressed === 'Enter' ||
       keyPressed === 'CapsLock'
-    )
+    ) {
       return;
-    // If the user hasn't started typing yet and they
-    if (!startedTyping) {
+    }
+    if (!isFinished && !startedTyping) {
       setStartedTyping(true);
-      setInterval(
-        () =>
-          (wholeInterval = setTimeElapsedWhole(
-            Math.round((new Date().getTime() - startTime.getTime()) / 1000)
-          )),
-        1000
-      );
-      setInterval(
-        () =>
-          (decimalInterval = setTimeElapsedDecimal(
-            Math.round((new Date().getTime() - startTime.getTime()) % 1000)
-          )),
-        100
-      );
+      reset();
+      start();
     }
 
+    setTyping(typing + keyPressed);
+    setTypingIndex(typingIndex + 1);
+
     if (charArray !== undefined && typingIndex === charArray.length - 1) {
-      clearInterval(wholeInterval);
-      clearInterval(decimalInterval);
+      setStartedTyping(false);
       setIsFinished(true);
-      setFinalTime(timeElapsedWhole + '.' + timeElapsedDecimal);
+      setAccuracy(
+        (((charArray.length - totalErrors) / charArray.length) * 100).toFixed(
+          0
+        ) + '%'
+      );
+      setWpm(
+        ((charArray.length / 5) / ((seconds + (minutes * 60)) / 60)).toFixed(0) + ' wpm'
+      );
+      setCpm(
+        ((charArray.length) / ((seconds + (minutes * 60)) / 60)).toFixed(0) + ' cpm'
+      );
+      setFinalTime(
+        minutes.toLocaleString('en-US', {
+          minimumIntegerDigits: 2,
+          useGrouping: false,
+        }) +
+          ':' +
+          seconds.toLocaleString('en-US', {
+            minimumIntegerDigits: 2,
+            useGrouping: false,
+          })
+      );
+      if (isRunning) {
+        reset();
+        pause();
+      }
       return;
     } else if (charArray === undefined) return;
 
     if (!acceptedKeys.includes(keyPressed)) return;
 
     if (charArray !== undefined && keyPressed !== charArray[typingIndex]) {
-      if (keyPressed !== 'Backspace')
+      if (keyPressed !== 'Backspace') {
+        setTotalErrors((totalErrors) => totalErrors + 1);
         setErrorMap({ ...errorMap, [typingIndex]: true });
+      }
     }
     if (charArray !== undefined && keyPressed === charArray[typingIndex]) {
       setErrorMap({ ...errorMap, [typingIndex]: false });
@@ -190,65 +215,56 @@ const Typer: React.FC<TyperProps> = (props: TyperProps) => {
         setErrorMap({ ...errorMap, [typingIndex]: false });
       return;
     }
-    setTyping(typing + keyPressed);
-    setTypingIndex(typingIndex + 1);
-  };
-
-  const reset = () => {
-    setTyping('');
-    setTypingIndex(0);
-    setErrorMap({});
-    setIsFinished(false);
-    setStartedTyping(false);
-    setTimeElapsedWhole(0);
-    setTimeElapsedDecimal(0);
-    setStartTime(new Date());
-    clearInterval(wholeInterval);
-    clearInterval(decimalInterval);
   };
 
   return (
-    <div className='text-center mx-auto w-full sm:w-96 mt-4 mb-12'>
-      {!isFinished && (
-        <div>
-          <div>
-            {timeElapsedWhole}.{timeElapsedDecimal}
-          </div>
-          <h2>{props?.verse?.ref}</h2>
-          <div>
-            <div className='h-48 w-96 mx-auto overflow-scroll'>
-              {charArray?.map((letter, index) => (
-                <span
-                  key={index}
-                  className={
-                    (index === typingIndex && 'text-blue-500 underline') ||
-                    (errorMap[index] && 'bg-red-300 text-red-500') ||
-                    (index < typingIndex && 'text-green-500')
-                  }
-                >
-                  {letter}
-                </span>
-              ))}
-            </div>
-            <textarea
-              autoFocus
-              placeholder={charArray?.join('').substring(0, 11) + '...'}
-              className='p-0 w-96 border-2 border-slate-200 bg-slate-50'
-              value={typing}
-              onKeyDown={(e) => handleKeyDown(e)}
-            ></textarea>
+    <div className='mx-auto w-full sm:w-96 mt-4'>
+      <div className='text-left'>
+        <div className='flex flex-row justify-between bg-blue-50'>
+          <h2 className='font-bold'>{props?.verse?.ref}</h2>
+          <div className='font-bold'>
+            Time Elapsed{' '}
+            {minutes.toLocaleString('en-US', {
+              minimumIntegerDigits: 2,
+              useGrouping: false,
+            })}
+            {':'}
+            {seconds.toLocaleString('en-US', {
+              minimumIntegerDigits: 2,
+              useGrouping: false,
+            })}
           </div>
         </div>
-      )}
+        <div className='flex flex-col items-center'>
+          <div
+            className='w-full p-2'
+            ref={typingRef}
+            tabIndex={0}
+            onKeyDown={(e) => handleKeyDown(e)}
+          >
+            {charArray?.map((letter, index) => (
+              <span
+                key={index}
+                className={
+                  (index === typingIndex && 'text-blue-500 underline') ||
+                  (errorMap[index] && 'bg-red-300 text-red-500') ||
+                  (index <= typingIndex && 'text-green-500')
+                }
+              >
+                {letter}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
       {isFinished && (
-        <div>
-          <p>
-            Nice job! Your final time for {props?.verse?.ref} was (
-            {finalTime}) seconds.
-          </p>
+        <div className='text-center'>
+          <p>Final Time - ({finalTime})</p>
+          <p>Accuracy - {accuracy}</p>
+          <p>WPM - {wpm}</p>
+          <p>CPM - {cpm}</p>
           <button
             onClick={() => {
-              reset();
               window.location.reload();
             }}
             className='text-blue-400'
